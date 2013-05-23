@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Panel fixed positioning - jQuery Mobile Demos</title>
+	<link rel="stylesheet"  href="css/jquery.mobile.min.css">
+	<link rel="stylesheet" href="css/jqm-demos.css">
+	<link rel="shortcut icon" href="css/favicon.ico">
+	<link type="text/css" rel="stylesheet" href="css/style.css"/> 
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />
+
+
+	<script src="js/jquery.js"></script>
+	<script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/Concurrent.Thread.js"></script>
+
+	<script src="js/portlets.js"></script>>
+
+	</script>
+	<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
+
+	<script src="js/index.js"></script>
+	<script src="js/jquery.mobile.min.js"></script>
+	<style>
+		.ui-btn {
+		display: block;
+		text-align: center;
+		cursor: pointer;
+		position: relative;
+		margin: .2em 0;
+		padding: 0;
+		}
+	</style>
+</head>
+<body>
+
+
+<div data-role="page" class="jqm-demos ui-responsive-panel" id="panel-fixed-page1" data-url="panel-fixed-page1">
+	<div id="statusbarTop" data-role="header" data-theme="f" data-position="fixed" > <!--onmouseover="flicker('true')"> -->
+		<h1>Status</h1>
+		<a href="#nav-panel" data-icon="bars" data-iconpos="notext" style="display:none;">Menu</a>
+		<a href="#add-form" data-icon="gear" data-iconpos="notext" style="display:none;">Alerts</a>
+	</div><!-- /header -->
+	
+	<div data-role="content" class="jqm-content" id="mc2graph">
+
+		<div class="rightbar"    >
+			<div data-role="header">
+				<p style="margin: 0.2em 0.2em;">
+					<a id="yellownode" href="#" data-role="button" data-theme="a" data-inline="true" style="width: 20%;float: right;background:#FBD200;margin:0px;color: #fff; ">0</a>
+					<a id="orangenode" href="#" data-role="button" data-theme="b" data-inline="true" style="width: 20%;float: right;background:#FF9800;margin:0px; color: #fff;">0</a>
+					<a id="rednode" href="#" data-role="button" data-theme="c" data-inline="true" style="width: 20%;float: right;background:#D60A00;margin:0px;color: #fff; ">0</a>
+				</p>
+				<h1 style='text-align: left;margin-left: 0.5em;'>Node Status</h1>
+			</div>
+			<div  id="rightcolumn" class="column" style="display:none">
+			</div> <!-- column ends -->
+		</div>
+		<div class="leftbar" >
+			<div data-role="header" >
+				<p style="margin: 0.2em 0.2em;">
+					<a id="yellowlink" href="#" data-role="button" data-theme="a" data-inline="true" style="width: 20%;float: right; right;background:#FBD200;margin:0px;color: #fff;">0</a>
+					<a id="orangelink" href="#" data-role="button" data-theme="b" data-inline="true" style="width: 20%;float: right; background:#FF9800;margin:0px;color: #fff;">0</a>
+					<a  id="redlink" href="#" data-role="button" data-theme="c" data-inline="true" style="width: 20%;float: right; background:#D60A00;margin:0px;color: #fff;">0</a>
+				</p>
+				<h1 style='text-align: left;margin-left: 0.5em;'>Link Status</h1>
+			</div>
+			<div  id="leftcolumn" class="column" style="display:none">
+			</div>		
+		</div><!-- /content -->
+		<div id="statusbarBottom" data-role="footer" data-position="fixed" data-theme="f">
+			<h4>Status</h4>
+		</div><!-- /footer -->
+
+	</div><!-- /panel -->
+</div>
+
+<script type="text/javascript" src="d3/d3.v3.js"></script>
+<script src="js/Tooltip.js"></script>
+<script type="text/javascript">
+
+	
+var w = 1400,
+    h = 800,
+    node,
+    link,
+    root,
+	nodes = [],
+	links = [],
+	standbylinks = [],
+	scaling = 1,	
+	tooltip = Tooltip("vis-tooltip", 230);
+
+var force = d3.layout.force()
+    .on("tick", tick)
+    .charge(-45)
+  .linkDistance(40)
+    .size([w, h]);
+
+	var chart = d3.select("body").select("#mc2graph").append("div")
+	.attr("id","chart")
+	.style("margin-left","50px");
+	
+var vis = chart.append("svg:svg")
+    .attr("width", w)
+    .attr("height", h)
+	.style("margin-left","150px")
+	.style("margin-right","15px")
+	.style("margin-bottom","15px")
+	.append("svg:g");
+
+
+var timeout;
+
+function loadNext() {
+	url = "php/getJSON.php";
+	d3.json(url, function(json) {
+		//process incoming json data
+		json.forEach(function(j) {
+			if(j.type == "structure") {
+				j.data.devices.forEach(function(d) {
+				nodes.push(d);
+				});
+				j.data.connections.forEach(function(c) {
+				standbylinks.push(c);
+				});
+				update();
+			} else if(j.type == "event") {
+					j.data.events.forEach(function(r) {
+					alertFunction(r);	
+				});
+			} else { 
+				//undefined type, ignore.
+			}
+		});
+		timeout = setTimeout(loadNext, 10000);
+	});
+}
+
+loadNext();
+
+
+function alertFunction(d)
+{
+
+
+	if(d["deviceId"]){
+	var header, message;
+		node = vis.select("#node"+d["deviceId"]);
+		node.style("fill", (d.alertLevel ==4 ?  Concurrent.Thread.create(resolvenode, node): getcolorforalertlevel(d["alertLevel"])));
+		flicker('true',d["alertLevel"]);
+		var nodeportlet = document.getElementById("nport"+d["deviceId"]);
+		if(nodeportlet)
+		{
+			nodeportlet.parentNode.removeChild(nodeportlet);
+			var pnode = document.getElementById("rightcolumn");
+			if(!pnode.childNodes.length>0)
+				$("#rightcolumn").css("display", "none");
+		}
+		if(d.alertLevel <4){
+			nodes.forEach(function(n) {
+				if(n.id == d["deviceId"]) {
+					header = "new alert at "+n.type+ "" +n.id ;
+					message =  "Alert type: "+d["eventType"];
+					message+= "</br>Location: " +n.location;
+					message+= "</br> Location detail:" +n.locationDetail;
+					
+				}
+			});
+			
+			var newalert = '<div id="nport'+d["deviceId"]+'"class="portlet ui-widget ui-widget-content ui-helper-clearfix ui-corner-all '+alerttocolormap(d["alertLevel"])+' ">';
+			newalert+='<div class="portlet-header ui-widget-header ui-corner-all" style="font-size:.5 em;background:'+getcolorforalertlevel(d["alertLevel"])+';font-size: 0.9em;color: #fff;">'+header+'</div>';
+			newalert+='<div class="portlet-content">'+message +'</div>';
+			newalert+='</div>';
+			$("#rightcolumn").css("display", "block");
+			$("#rightcolumn").append(newalert);
+		}
+	}
+	else if (d["devicePair"]){
+	var header, message;
+		var linkid;
+		devicepair = d["devicePair"];
+		if(devicepair[0] > devicepair[1])
+			linkid = devicepair[0]+"000"+devicepair[1];
+		else
+			linkid = devicepair[1]+"000"+devicepair[0];
+		
+			link = vis.select("line#link"+linkid);
+		if(d.alertLevel == 4){
+			 Concurrent.Thread.create(resolvelink, link)
+		
+		}else{
+			link.style("stroke",getcolorforalertlevel(d["alertLevel"]));
+			link.style("stroke-width",".5em");
+		}
+		flicker('true',d["alertLevel"]);
+		
+		var linkportlet = document.getElementById("lp"+linkid);
+		if(linkportlet)
+		{
+			linkportlet.parentNode.removeChild(linkportlet);
+		
+			var parentnode = document.getElementById("leftcolumn");
+			if(!parentnode.childNodes.length>0)
+				$("#leftcolumn").css("display", "none");
+		}
+		 if(d.alertLevel <4){
+			links.forEach(function(L) {
+			if(L.devicePair[0] > L.devicePair[1])
+				newlinkid = L.devicePair[0]+"000"+L.devicePair[1];
+			else
+				newlinkid = L.devicePair[1]+"000"+L.devicePair[0];
+				
+			
+			
+			if(newlinkid == linkid) {
+			
+				header = "Link Between"+L.source.type+""+L.source.id+" and "+L.target.type+""+L.target.id;
+				message =  "Alert Type: "+d.eventType;
+				message+= "</br> message:"+d.message;
+				
+			}
+			});
+			
+			var newalert = '<div id="lp'+linkid+'" class="portlet ui-widget ui-widget-content ui-helper-clearfix ui-corner-all '+alerttocolormap(d["alertLevel"])+' ">';
+			newalert+='<div class="portlet-header ui-widget-header ui-corner-all" style="font-size:.5 em;background:'+getcolorforalertlevel(d["alertLevel"])+';font-size: 0.9em;color: #fff;">'+header+'</div>';
+			newalert+='<div class="portlet-content">'+message +'</div>';
+			newalert+='</div>';
+			$("#leftcolumn").css("display", "block");
+			$("#leftcolumn").append(newalert);
+		}
+	}
+	//update badges
+	document.getElementById("rednode").innerHTML=$("#rightcolumn .red").length;
+	document.getElementById("yellownode").innerHTML=$("#rightcolumn .yellow").length;
+	document.getElementById("orangenode").innerHTML=$("#rightcolumn .orange").length;
+	document.getElementById("redlink").innerHTML=$("#leftcolumn .red").length;
+	document.getElementById("yellowlink").innerHTML=$("#leftcolumn .yellow").length;
+	document.getElementById("orangelink").innerHTML=$("#leftcolumn .orange").length;
+	//update badges
+	
+	
+}
+
+function resolvenode(n){
+	n.style("fill",getcolorforalertlevel(4));
+	var millisecondsToWait = 6000;
+	setTimeout(function() {
+		n.style("fill","#a9a9a9");
+	}, millisecondsToWait);
+}
+
+function resolvelink(l){
+	l.style("stroke",getcolorforalertlevel(4));
+	var millisecondsToWait = 2000;
+	setTimeout(function() {
+		l.style("stroke","#9ecae1");
+		l.style("stroke-width","1.5px");
+	}, millisecondsToWait);
+}
+
+
+
+function prep() {
+	nodes = nodes.sort(sortById);
+	
+	standbylinks.forEach(function(f,i) {
+		if(!f.source || !f.target) {
+			s = getElementById(nodes, f.devicePair[0]);
+			t = getElementById(nodes, f.devicePair[1]);
+			f.source = s;
+			f.target = t;
+		} 
+	});
+	
+	var i;
+	
+	for (i = standbylinks.length - 1; i >= 0; i -= 1) {
+		if (standbylinks[i].source && standbylinks[i].target) {
+			links.push(standbylinks[i]);
+			standbylinks.splice(i, 1);
+		}
+	}
+}
+
+function update() {
+
+	prep();
+  // Restart the force layout.
+	force
+		.nodes(nodes)
+		.links(links)
+		.start();
+
+  // Update the links…
+	link = vis.selectAll("line.link")
+		.data(links);
+
+  // Enter any new links.
+  link.enter().insert("svg:line", ".node")
+			.attr("id",function(d) { 
+				if(d.devicePair[0] > d.devicePair[1])
+					return "link"+d.devicePair[0]+"000"+d.devicePair[1]; 
+				else
+					return "link"+d.devicePair[1]+"000"+d.devicePair[0];
+				})
+			  .attr("class", "link")
+			  .attr("x1", function(d) { return d.source.x; })
+			  .attr("y1", function(d) { return d.source.y; })
+			  .attr("x2", function(d) { return d.target.x; })
+			  .attr("y2", function(d) { return d.target.y; });
+
+  // Exit any old links.
+	link.exit().remove();
+
+  // Update the nodes…
+	node = vis.selectAll("circle.node")
+      .data(nodes, function(d) { return d.id; })
+      .style("fill", color);
+
+ // node.transition()
+   //   .attr("r", function(d) { return (11-d.criticalness) * scaling; });
+
+  // Enter any new nodes.
+	node.enter().append("svg:circle")
+      .attr("class", function(d){ return "node";} )
+	  .attr("id" ,function(d) { return "node"+d.id;})
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; })
+      .attr("r", function(d) { return (11-d.criticalness) * scaling; })
+      .style("fill", color);
+  
+	node.on("mouseover", showDetails).on("mouseout", hideDetails);
+  // Exit any old nodes.
+  node.exit().remove();
+}
+
+function tick() {
+  link.attr("x1", function(d) { return d.source.x; })
+      .attr("y1", function(d) { return d.source.y; })
+      .attr("x2", function(d) { return d.target.x; })
+      .attr("y2", function(d) { return d.target.y; });
+
+  node.attr("cx", function(d) { return d.x = Math.max((11-d.criticalness) * scaling, Math.min(w - (11-d.criticalness) * scaling, d.x)); })
+      .attr("cy", function(d) { return d.y = Math.max((11-d.criticalness) * scaling, Math.min(h - (11-d.criticalness) * scaling, d.y)); });
+	  
+}
+
+// Color leaf nodes orange, and packages white or blue.
+function color(d) {
+  return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#A9A9A9";
+}
+
+
+
+//sort an array by "id"
+function sortById(a, b) {
+	if (a.id < b.id) return -1;
+	if (a.id > b.id) return 1;
+	else return 0;
+}
+
+function getElementById(array, id) {
+	var low = 0, high = array.length -1, i;
+	while (low <= high) {
+		i = Math.floor((low+high) /2);
+		if( array[i].id < id) {low = i+1; continue; };
+		if( array[i].id > id) {high = i-1; continue; };
+		return array[i];
+	}
+	return null;
+}
+
+showDetails = function(d, i) {
+    var content;
+    content = '<p class="main">' + d.type +':'+ d.id + '</span></p>';
+    content += '<hr>';
+    content += '<p class="main">' + d.locationDetail + '</span></p>';
+	content += '<p class="main">' + d.location + '</span></p>'
+    tooltip.showTooltip(content, d3.event);
+}
+	
+	
+hideDetails = function(d, i) {
+	tooltip.hideTooltip();
+}
+
+var flick,countdown=8,currentalertlevel=4;
+var prevalertlevel=4 ;
+
+function flicker(timer,alertlevel)	{
+	clearTimeout(flick);
+	
+	
+	document.getElementById("statusbarTop").setAttribute('style','background-color:'+getcolorforalertlevel(prevalertlevel));
+	document.getElementById("statusbarBottom").setAttribute('style','background-color:'+getcolorforalertlevel(prevalertlevel));
+	 // sets flicker colors
+	flick = setTimeout(function(){ styles(alertlevel); },250); // begins the flicker and sends to styles function
+}
+
+function styles(alertlevel)	{
+	
+	//if(alertlevel<=currentalertlevel) {
+		
+		//currentalertlevel = alertlevel;
+//	}
+
+	if(alertlevel<=currentalertlevel) {
+		prevalertlevel = currentalertlevel;
+		currentalertlevel = alertlevel;
+	}
+	else if(alertlevel>currentalertlevel)
+	{
+		prevalertlevel =4;
+		if($("#rightcolumn ."+alerttocolormap(currentalertlevel)).length<=0  && $("#leftcolumn ."+alerttocolormap(currentalertlevel)).length<=0 )
+		{
+			if(++currentalertlevel !=4)
+				if($("#rightcolumn ."+alerttocolormap(currentalertlevel)).length<=0 && $("#leftcolumn ."+alerttocolormap(currentalertlevel)).length<=0 )
+					if(++currentalertlevel !=4)
+						if($("#rightcolumn ."+alerttocolormap(currentalertlevel)).length<=0 && $("#leftcolumn ."+alerttocolormap(currentalertlevel)).length<=0 )
+									currentalertlevel=4;
+		}
+	}
+	document.getElementById("statusbarTop").setAttribute('style','background-color:'+getcolorforalertlevel(currentalertlevel));
+	document.getElementById("statusbarBottom").setAttribute('style','background-color:'+getcolorforalertlevel(currentalertlevel));
+	countdown--;
+	if (countdown>-1) {
+		flick = setTimeout(function(){ flicker(); },250); // alternative flicker color and invoke function loop
+	}
+	else
+		countdown=8;
+}
+
+function getcolorforalertlevel(alertlevel)
+{
+	switch(alertlevel)
+	{
+	case 1: return "#D60A00"; //red color
+	break;
+	case 2: return "#FF9800"; //orange color
+	break;
+	case 3: return "#FBD200"; //yellow color
+	break;
+	case 4: return "#6ABA2F"; // green color
+	break;
+	default: return 0;
+	break;
+	}
+}
+
+function alerttocolormap(alert)
+{
+	switch(alert)
+	{
+		case 1: return "red"; //red color
+		break;
+		case 2: return "orange"; //orange color
+		break;
+		case 3: return "yellow"; //yellow color
+		break;
+		case 4: return "green"; // green color
+		break;
+		default: return 0;
+		break;
+	
+	}
+}
+
+</script>
+  
+
+</body>
+</html>

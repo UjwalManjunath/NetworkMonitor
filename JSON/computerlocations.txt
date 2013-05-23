@@ -1,0 +1,19 @@
+1st Floor
+2nd Floor
+3rd Floor
+Sales Department
+R&D
+Customer Service
+The Dungeon
+IT
+Advertising
+Supply room
+Mail Room
+Shipping
+Packaging
+Conference Room
+Executive Offices
+Accounts Receivable
+Accounts Payable
+Payroll
+HR

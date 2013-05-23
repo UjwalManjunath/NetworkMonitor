@@ -1,0 +1,79 @@
+London
+Norfolk
+Tokyo
+Lisbon
+Washington D.C.
+San Francisco
+Hong Kong
+Paris
+Montreal
+Dallas
+Alexandria
+Algiers
+Almaty
+Ankara
+Antananarivo
+Antwerp
+Athens
+Bangkok
+Banjul
+Beirut
+Belgrade
+Bombay
+Bratislava
+Brussels
+Bucharest
+Cairo
+Calcutta
+Canton
+Cape Town
+Cologne
+Copenhagen
+Dacca
+Damascus
+Dublin
+Florence
+Foochow
+Gdánsk
+Genoa
+Geneva
+Harare
+Helsinki
+Ho Chi Minh City
+Istanbul
+Jakarta
+Kiev
+Kinshasa
+Kuwait City
+Lisbon
+Lubumbashi
+Lyons
+Madras
+Maputo
+Mexico City
+Milan
+Moscow
+Munich
+Nanking
+Naples 
+Nuuk
+Oslo
+Peking
+Prague
+Pusan
+Quebec City
+Rangoon
+Rome
+Sofia
+Saint Petersburg
+Swatow
+Tallinn
+Tbilisi
+The Hague
+Tientsin
+Turin
+Ulan Bator
+Venice
+Vienna
+Vilnius
+Warsaw
