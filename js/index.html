@@ -1,0 +1,73 @@
+<html>
+<title>Project 2 - VAST 2013 Mini-Challenge 2</title>
+<body>
+<ul><h2>Group Members</h2>
+<li>Mohan Kodali - Scheduler/Task Master</li>
+<li>Ujwal Manjunath - Lead Programmer</li>
+<li>Andrew Schaefer - Team Lead</li>
+</ul>
+
+<h2>VAST Mini-Challenge 2</h2>
+<a href="http://vacommunity.org/VAST+Challenge+2013%3A+Mini-Challenge+2">Description</a>
+
+<h2>Problem</h2>
+We are tasked with designing an innovative display for a Network Operations Center. The display should inform staff of the network status. 
+It should be intuitive and easy to read. The network consists of Thousands of computers, and multiple data centers, across the globe. The NOC is staffed around the clock.
+<h2>Initial Approach</h2>
+Early analysis of the problem yields two important aspects to monitor:
+<ol>
+	<li>Network Condition
+	<ol>
+		<li style="color:green">Normal Activity - everything is operating as expected (Green)</li>
+		<li style="color:#CCCC00">Routine Issues - common problems for which the solutions are well understood (Yellow)</li>
+		<li style="color:orange">Non-routine Issues - new or infrequent problems which may require a response, but the appropriate response is not established in advance (Orange)</li>
+		<li style="color:red">Crises - severe and/or multiple issues occuring simulatneously whose cause root is unclear (Red) </li>
+	</ol></li>
+	<li>Condition aspects
+	<ul>
+		<li>Health - Are all the computers behaving as expected with the necessary patches and updates to operate normally?</li>
+		<li>Security - Are there any attacks that might affect the Enterprise, such as an active virus, a denial of service, or theft of company secrets?</li>
+		<li>Performance - Are there data transfer issues such as routing problems or misconfigurations that are affecting network speed?</li>
+	</ul></li>
+</ol>
+
+As you can see, we have colored the Condition codes, in a standard green to red fashion, to indicate the severity of the issue. 
+One of our first considerations will be how to measure each of the condition aspects, and then how to categorize those measures. 
+
+<br />
+We plan to look into the SNMP protocol, and other network management tools for inspiration.
+
+<br />
+Design of the visualization will need some consideration (below is a quick mockup), networks consist of two topologies, physical and logical. 
+While the physical topology might make for an easy display, we are concerned that it might not be as informative as the actual logical topology.
+Initial thoughts shown below include: A "Status Border" colored to reflect the current Network Condition, this allows for quick and easy identification of normal activity or the existence of an issue.
+Along the bottom: a Data Center Ticker, inspired by the ESPN style sports ticker, to give incremental views into each major data center (concern for too much information, not frequent enough refresh?)
+To the right; An Triggered alarms, this pane will not display during Green(Normal activity) status, however if anything triggers another Condition, the triggering event(s) will be displayed in this pane, 
+in severity/priority order (red, orange, yellow) when this pane is displayed the network display will resize accordingly to avoid any loss of visual data
+
+<br /><br />
+<img src="prototype.bmp" />
+
+<a href="samples/">Motivation Network Visualizations</a>
+
+
+
+<!--
+<br /><br />
+<h2><a href="">Progress Report</a></h2>
+
+<br /><br />
+<h2><a href="">"Like me" Explorer</a></h2>
+
+<br /><br />
+<h2><a href="">Where to stay? Map</a></h2>
+
+<br /><br />
+<h2><a href="">Presentation</a></h2>
+
+<br /><br />
+<h2><a href="">Final Report</a></h2>
+-->
+
+</body>
+</html>
